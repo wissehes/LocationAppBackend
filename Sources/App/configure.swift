@@ -9,6 +9,7 @@ public func configure(_ app: Application) async throws {
     // uncomment to serve files from /Public folder
     // app.middleware.use(FileMiddleware(publicDirectory: app.directory.publicDirectory))
 
+    // Database
     app.databases.use(.postgres(configuration: SQLPostgresConfiguration(
         hostname: Environment.get("DATABASE_HOST") ?? "localhost",
         port: Environment.get("DATABASE_PORT").flatMap(Int.init(_:)) ?? SQLPostgresConfiguration.ianaPortNumber,
@@ -18,11 +19,14 @@ public func configure(_ app: Application) async throws {
         tls: .prefer(try .init(configuration: .clientDefault)))
     ), as: .psql)
 
+    // Migrations
     app.migrations.add(CreateTodo())
-
-    app.views.use(.leaf)
-
+    app.migrations.add(User.Migration())
+    app.migrations.add(UserToken.Migration())
+    app.migrations.add(UserLocation.Migration())
     
+    // Views
+    app.views.use(.leaf)
 
     // register routes
     try routes(app)
